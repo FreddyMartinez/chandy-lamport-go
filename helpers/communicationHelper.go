@@ -3,7 +3,9 @@
 package helpers
 
 import (
+	"bytes"
 	"encoding/gob"
+	"fmt"
 	"net"
 )
 
@@ -19,9 +21,13 @@ func Send(data interface{}, ip string) error {
 		panic("Client connection error")
 	}
 
-	encoder = gob.NewEncoder(conn)
+	binBuffer := new(bytes.Buffer)
+
+	encoder = gob.NewEncoder(binBuffer)
 	err = encoder.Encode(data)
-	conn.Close()
+
+	conn.Write(binBuffer.Bytes())
+	defer conn.Close()
 	return err
 }
 
@@ -29,17 +35,23 @@ func Send(data interface{}, ip string) error {
 func Receive(data interface{}, listener *net.Listener) error {
 	var conn net.Conn
 	var err error
-	var decoder *gob.Decoder
+	tmp := make([]byte, 512)
+	tmpbuff := bytes.NewBuffer(tmp)
 
 	conn, err = (*listener).Accept()
 	if err != nil {
 		panic("Server accept connection error")
 	}
 
-	decoder = gob.NewDecoder(conn)
+	_, err = conn.Read(tmp[0:])
+	if err != nil {
+		panic(fmt.Sprintf("Server accept connection error: %s", err))
+	}
+
+	decoder := gob.NewDecoder(tmpbuff)
 
 	err = decoder.Decode(data)
-	conn.Close()
+	defer conn.Close()
 
 	return err
 }
