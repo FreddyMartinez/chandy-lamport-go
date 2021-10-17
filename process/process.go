@@ -6,27 +6,40 @@ import (
 )
 
 type Process struct {
-	mainJob           *models.MainJob
-	communication     *CommunicationModule
-	stateManager      StateManager
-	updateStateChan   chan models.ProcessEvent // notify when an event occurs
-	processMessageOut chan models.Message
-	processMessageIn  chan models.Message
+	mainJob          *models.MainJob
+	communication    *CommunicationModule
+	stateManager     StateManager
+	processMessageIn chan models.Message
 }
 
 func CreateProcess(processInfo models.ProcessInfo) *Process {
 
 	processMessageIn := make(chan models.Message, 10)
 	processMessageOut := make(chan models.Message)
+	updateStateChan := make(chan models.ProcessEvent) // notify when an event occurs
 
-	thisJob := models.CreateJob(processInfo)
+	// Obtener de un archivo
+	network := []models.ProcessInfo{
+		{
+			Name: "P0",
+			Ip:   "127.0.0.1",
+			Port: "18660",
+		},
+		{
+			Name: "P1",
+			Ip:   "127.0.0.1",
+			Port: "18661",
+		},
+	}
+
+	thisJob := models.CreateJob(processInfo, network, updateStateChan, processMessageOut)
 
 	thisCommunicationMod := CreateCommunicationModule(processInfo.Port, processMessageIn, processMessageOut)
 
 	thisProcess := Process{
-		mainJob:           thisJob,
-		communication:     thisCommunicationMod,
-		processMessageOut: processMessageOut,
+		mainJob:          thisJob,
+		communication:    thisCommunicationMod,
+		processMessageIn: processMessageIn,
 	}
 
 	return &thisProcess
@@ -39,10 +52,4 @@ func (p *Process) ReceiveMessages() {
 		message := <-p.processMessageIn
 		fmt.Printf("Msg [%v] receive from: %s\n", message.Body, message.Sender)
 	}
-}
-
-func (p *Process) SendMessage(message *models.Message) {
-	fmt.Printf("Msg [%v] sent to: %s\n", message.Body, message.Receiver)
-	fmt.Println(message)
-	p.processMessageOut <- *message
 }
