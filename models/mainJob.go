@@ -1,18 +1,18 @@
 package models
 
 type ProcessInfo struct {
-	name string
-	ip   string
-	port string
+	Name string
+	Ip   string
+	Port string
 }
 
 type MainJob struct {
-	processInfo ProcessInfo   // it's own info
-	networkInfo []ProcessInfo // other processes info
-	data        ProcessData
+	ProcessInfo ProcessInfo   // it's own info
+	NetworkInfo []ProcessInfo // other processes info
+	Data        ProcessData
 }
 
-func CreateJob() *MainJob {
-	myJob := MainJob{}
+func CreateJob(processInfo ProcessInfo) *MainJob {
+	myJob := MainJob{ProcessInfo: processInfo}
 	return &myJob
 }

@@ -5,21 +5,21 @@ type ProcessData struct {
 }
 
 type ProcessEvent struct {
-	description string
-	data        ProcessData // to simulate some task
+	Description string
+	Data        ProcessData // to simulate some task
 }
 
 type ProcessHistory struct {
-	currentEvent int
-	eventHistory []ProcessEvent
-	messagesIn   []Message
-	messagesOut  []Message
+	CurrentEvent int
+	EventHistory []ProcessEvent
+	MessagesIn   []Message
+	MessagesOut  []Message
 }
 
 type GlobalState struct {
-	networkState map[string]ProcessHistory
+	NetworkState map[string]ProcessHistory
 }
 
 type ChanelState struct {
-	recording bool
+	Recording bool
 }

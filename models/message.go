@@ -1,11 +1,11 @@
 package models
 
 type Message struct {
-	sender   string
-	receiver string
-	body     interface{}
+	Sender   string
+	Receiver string
+	Body     interface{}
 }
 
 func NewMessage(sender string, receiver string, body interface{}) Message {
-	return Message{sender: sender, receiver: receiver, body: body}
+	return Message{Sender: sender, Receiver: receiver, Body: body}
 }
