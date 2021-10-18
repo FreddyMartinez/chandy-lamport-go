@@ -1,10 +1,11 @@
 package main
 
 import (
-	"chandylamport/models"
+	"chandylamport/helpers"
 	"chandylamport/process"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -12,16 +13,22 @@ func main() {
 	// Obtain process data
 	args := os.Args[1:]
 	processId := args[0]
-	port := args[1]
-	ip := args[2]
-	fmt.Println(fmt.Sprintf("Creating process: %v, in port: %v", processId, port))
+	fileName := args[1]
 
-	processInfo := models.ProcessInfo{Port: port, Name: processId, Ip: ip}
+	index, err := strconv.Atoi(processId)
+	if err != nil {
+		panic("Invalid argument when creating process")
+	}
+
+	network := helpers.ReadNetConfig(fileName)
+	processInfo := network[index]
+
+	fmt.Println(fmt.Sprintf("Creating process: %v, in port: %v", processInfo.Name, processInfo.Port))
 
 	process := process.CreateProcess(processInfo)
 
 	go process.ReceiveMessages()
 
 	fmt.Println("LLegó al final")
-	time.Sleep(50 * time.Second)
+	time.Sleep(5 * time.Second)
 }
