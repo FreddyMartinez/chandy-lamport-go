@@ -39,12 +39,11 @@ func (comMod *CommunicationModule) receiver() {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(*data)
 		comMod.processMessageIn <- *data
 	}
 }
 
-// This method should send any message to the
+// This method should send any message to other processes, not concurrent
 func (comMod *CommunicationModule) sender() {
 	for {
 		select {

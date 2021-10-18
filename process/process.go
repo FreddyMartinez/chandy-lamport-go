@@ -12,27 +12,15 @@ type Process struct {
 	processMessageIn chan models.Message
 }
 
-func CreateProcess(processInfo models.ProcessInfo) *Process {
+func CreateProcess(processId int, network []models.ProcessInfo) *Process {
+	processInfo := network[processId]
+	fmt.Println(fmt.Sprintf("Creating process: %v, in port: %v", processInfo.Name, processInfo.Port))
 
-	processMessageIn := make(chan models.Message, 10)
+	processMessageIn := make(chan models.Message)
 	processMessageOut := make(chan models.Message)
 	updateStateChan := make(chan models.ProcessEvent) // notify when an event occurs
 
-	// Obtener de un archivo
-	network := []models.ProcessInfo{
-		{
-			Name: "P0",
-			Ip:   "127.0.0.1",
-			Port: "18660",
-		},
-		{
-			Name: "P1",
-			Ip:   "127.0.0.1",
-			Port: "18661",
-		},
-	}
-
-	thisJob := models.CreateJob(processInfo, network, updateStateChan, processMessageOut)
+	thisJob := models.CreateJob(processInfo, network, updateStateChan, processMessageIn, processMessageOut)
 
 	thisCommunicationMod := CreateCommunicationModule(processInfo.Port, processMessageIn, processMessageOut)
 
@@ -42,6 +30,7 @@ func CreateProcess(processInfo models.ProcessInfo) *Process {
 		processMessageIn: processMessageIn,
 	}
 
+	go thisProcess.ReceiveMessages()
 	return &thisProcess
 }
 

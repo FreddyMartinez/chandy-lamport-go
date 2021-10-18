@@ -13,7 +13,7 @@ type StateManager struct {
 func CreateStateManager(pid string, updateStateChan chan models.ProcessEvent, saveGlobalState chan bool) *StateManager {
 
 	initEvent := models.ProcessEvent{Description: "Init", Data: ""}
-	eventhistory := make([]models.ProcessEvent, 10)
+	var eventhistory []models.ProcessEvent
 	eventhistory = append(eventhistory, initEvent)
 	initHistory := models.ProcessHistory{CurrentEvent: 0, EventHistory: eventhistory}
 	initGlobal := map[string]models.ProcessHistory{
@@ -39,7 +39,7 @@ func (sm *StateManager) UpdateState() {
 			sm.processHistory.EventHistory = append(sm.processHistory.EventHistory, newEvent)
 		case <-sm.SaveGlobalState:
 			sm.globalState[sm.processId] = sm.processHistory
-			// save messages???
+			//case save incomming messages
 		}
 	}
 }

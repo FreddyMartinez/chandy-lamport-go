@@ -21,14 +21,9 @@ func main() {
 	}
 
 	network := helpers.ReadNetConfig(fileName)
-	processInfo := network[index]
 
-	fmt.Println(fmt.Sprintf("Creating process: %v, in port: %v", processInfo.Name, processInfo.Port))
-
-	process := process.CreateProcess(processInfo)
-
-	go process.ReceiveMessages()
+	process.CreateProcess(index, network)
 
 	fmt.Println("LLegó al final")
-	time.Sleep(5 * time.Second)
+	time.Sleep(50 * time.Second) // usar kill chan bool
 }
