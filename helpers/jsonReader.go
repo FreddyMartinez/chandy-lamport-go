@@ -4,7 +4,6 @@ package helpers
 import (
 	"chandylamport/models"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 )
 
@@ -21,9 +20,20 @@ func readFile(fileName string) []byte {
 
 func ReadNetConfig(fileName string) []models.ProcessInfo {
 	data := readFile(fileName)
-	fmt.Println("Reading file " + fileName)
 
 	var myJson []models.ProcessInfo
+	err := json.Unmarshal(data, &myJson)
+	if err != nil {
+		panic(err)
+	}
+
+	return myJson
+}
+
+func ReadTaskList(fileName string) []models.Task {
+	data := readFile(fileName)
+
+	var myJson []models.Task
 	err := json.Unmarshal(data, &myJson)
 	if err != nil {
 		panic(err)

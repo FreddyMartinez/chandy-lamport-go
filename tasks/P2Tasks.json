@@ -1,0 +1,21 @@
+[
+  {
+    "MsgType": "AppMsg",
+    "Time": 2,
+    "Receiver": 1,
+    "Value": 5,
+    "NetworkDelay": 1200
+  },
+  {
+    "MsgType": "AppMsg",
+    "Time": 2,
+    "Receiver": 2,
+    "Value": 5,
+    "NetworkDelay": 1200
+  },
+  {
+    "MsgType": "MarkMsg",
+    "Time": 2,
+    "NetworkDelay": 1200
+  }
+]
