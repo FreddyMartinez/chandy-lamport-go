@@ -15,14 +15,12 @@ type ProcessEvent struct {
 type ProcessHistory struct {
 	CurrentEvent int
 	EventHistory []ProcessEvent
-	// MessagesIn   []Message
-	// MessagesOut  []Message
 }
 
-type GlobalState struct {
-	NetworkState map[string]ProcessHistory
-	// MessagesIn   []Message
-	// MessagesOut  []Message
+type Snapshot struct {
+	EventHistory ProcessHistory
+	MessagesIn   []Message
+	MessagesOut  []Message
 }
 
 type ChanelState struct {
