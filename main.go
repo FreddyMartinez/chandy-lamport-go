@@ -3,10 +3,8 @@ package main
 import (
 	"chandylamport/helpers"
 	"chandylamport/process"
-	"fmt"
 	"os"
 	"strconv"
-	"time"
 )
 
 func main() {
@@ -21,9 +19,10 @@ func main() {
 	}
 
 	network := helpers.ReadNetConfig(fileName)
+	taskList := helpers.ReadTaskList("tasks/P" + processId + "Tasks.json")
+	quit := make(chan bool)
 
-	process.CreateProcess(index, network)
+	process.CreateProcess(index, network, taskList, quit)
 
-	fmt.Println("LLegó al final")
-	time.Sleep(50 * time.Second) // usar kill chan bool
+	<-quit
 }

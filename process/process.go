@@ -6,39 +6,31 @@ import (
 )
 
 type Process struct {
-	mainJob          *models.MainJob
-	communication    *CommunicationModule
-	stateManager     StateManager
-	processMessageIn chan models.Message
+	mainJob       *MainJob
+	communication *CommunicationModule
+	stateManager  *StateManager
 }
 
-func CreateProcess(processId int, network []models.ProcessInfo) *Process {
+func CreateProcess(processId int, network []models.ProcessInfo, taskList []models.Task, quit chan bool) *Process {
 	processInfo := network[processId]
 	fmt.Println(fmt.Sprintf("Creating process: %v, in port: %v", processInfo.Name, processInfo.Port))
 
 	processMessageIn := make(chan models.Message)
 	processMessageOut := make(chan models.Message)
 	updateStateChan := make(chan models.ProcessEvent) // notify when an event occurs
+	saveGlobalState := make(chan bool)
 
-	thisJob := models.CreateJob(processInfo, network, updateStateChan, processMessageIn, processMessageOut)
+	thisJob := CreateJob(processInfo, network, updateStateChan, processMessageIn, processMessageOut, taskList, quit)
 
 	thisCommunicationMod := CreateCommunicationModule(processInfo.Port, processMessageIn, processMessageOut)
 
+	thisStateManager := CreateStateManager(processId, updateStateChan, saveGlobalState)
+
 	thisProcess := Process{
-		mainJob:          thisJob,
-		communication:    thisCommunicationMod,
-		processMessageIn: processMessageIn,
+		mainJob:       thisJob,
+		communication: thisCommunicationMod,
+		stateManager:  thisStateManager,
 	}
 
-	go thisProcess.ReceiveMessages()
 	return &thisProcess
-}
-
-// Receive mesages from Communication Module
-func (p *Process) ReceiveMessages() {
-	fmt.Println("Lanza ReceiveMessages")
-	for {
-		message := <-p.processMessageIn
-		fmt.Printf("Msg [%v] receive from: %s\n", message.Body, message.Sender)
-	}
 }

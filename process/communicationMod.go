@@ -28,6 +28,7 @@ func CreateCommunicationModule(port string, processMessageIn chan models.Message
 	}
 
 	go communicationModule.receiver()
+	go communicationModule.sender()
 	return &communicationModule
 }
 
@@ -48,7 +49,9 @@ func (comMod *CommunicationModule) sender() {
 	for {
 		select {
 		case processMsg := <-comMod.processMessageOut:
-			helpers.Send(processMsg.Body, processMsg.Receiver)
+			// find ip and port first
+			// helpers.Send(processMsg, processMsg.Receiver)
+			fmt.Println(processMsg)
 		}
 	}
 }
