@@ -16,12 +16,12 @@ type MainJob struct {
 	updateStateChan   chan models.ProcessEvent
 	processMessageOut chan models.Message
 	processMessageIn  chan models.Message
-	markMessageOut    chan int
+	saveGlobalState   chan int
 	ticker            *time.Ticker
 }
 
 // Returns the pointer to a new MainJob struct
-func CreateJob(processInfo models.ProcessInfo, network []models.ProcessInfo, updateStateChan chan models.ProcessEvent, processMessageIn chan models.Message, processMessageOut chan models.Message, taskList []models.Task, markMessageOut chan int, quit chan bool) *MainJob {
+func CreateJob(processInfo models.ProcessInfo, network []models.ProcessInfo, updateStateChan chan models.ProcessEvent, processMessageIn chan models.Message, processMessageOut chan models.Message, taskList []models.Task, saveGlobalState chan int, quit chan bool) *MainJob {
 	seed := rand.NewSource(time.Now().UnixMicro())
 	r := rand.New(seed)
 	tickerJob := time.NewTicker(2 * time.Second) // Increase amount each 2 seconds
@@ -34,8 +34,8 @@ func CreateJob(processInfo models.ProcessInfo, network []models.ProcessInfo, upd
 		updateStateChan:   updateStateChan,
 		processMessageOut: processMessageOut,
 		processMessageIn:  processMessageIn,
-		markMessageOut:    markMessageOut,
 		ticker:            tickerJob,
+		saveGlobalState:   saveGlobalState,
 	}
 	go myJob.MockJob()
 	go myJob.ExecuteTaskList(taskList, quit)
@@ -80,7 +80,7 @@ func (p *MainJob) ExecuteTaskList(taskList []models.Task, quit chan bool) {
 			p.updateStateChan <- event
 			p.Data.Mu.Unlock()
 		} else if task.MsgType == models.MsgMark {
-			p.markMessageOut <- task.NetworkDelay
+			p.saveGlobalState <- task.NetworkDelay
 		}
 	}
 

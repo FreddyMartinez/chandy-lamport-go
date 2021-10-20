@@ -5,6 +5,7 @@ import (
 	"chandylamport/models"
 	"fmt"
 	"net"
+	"time"
 )
 
 type CommunicationModule struct {
@@ -48,7 +49,13 @@ func (comMod *CommunicationModule) receiver() {
 		if err != nil {
 			panic(err)
 		}
-		comMod.processMessageIn <- *data
+		time.Sleep(time.Duration(data.NetworkDelay) * time.Millisecond)
+		switch data.MsgType {
+		case models.MsgApp:
+			comMod.processMessageIn <- *data
+		case models.MsgMark:
+			comMod.MarkMessageIn <- *data
+		}
 	}
 }
 

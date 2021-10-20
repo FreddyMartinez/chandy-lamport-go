@@ -10,10 +10,14 @@ type StateManager struct {
 	processHistory  models.ProcessHistory
 	Snapshots       []models.Snapshot
 	UpdateStateChan chan models.ProcessEvent
-	SaveGlobalState chan bool
+	SaveGlobalState chan int
+	MarkMessageIn   chan models.Message
+	MarkMessageOut  chan int
+	takingSnapshot  bool
+	pendingMarks    int
 }
 
-func CreateStateManager(pid int, updateStateChan chan models.ProcessEvent, saveGlobalState chan bool) *StateManager {
+func CreateStateManager(pid int, updateStateChan chan models.ProcessEvent, saveGlobalState chan int, markMessageIn chan models.Message, markMessageOut chan int) *StateManager {
 
 	initEvent := models.ProcessEvent{Description: "Init", Data: ""}
 	var eventhistory []models.ProcessEvent
@@ -27,6 +31,10 @@ func CreateStateManager(pid int, updateStateChan chan models.ProcessEvent, saveG
 		Snapshots:       snapshots,
 		UpdateStateChan: updateStateChan,
 		SaveGlobalState: saveGlobalState,
+		MarkMessageIn:   markMessageIn,
+		MarkMessageOut:  markMessageOut,
+		takingSnapshot:  false,
+		pendingMarks:    0,
 	}
 
 	go thisStateManager.UpdateState()
@@ -40,7 +48,7 @@ func (sm *StateManager) UpdateState() {
 			fmt.Println(newEvent)
 			sm.processHistory.CurrentEvent += 1
 			sm.processHistory.EventHistory = append(sm.processHistory.EventHistory, newEvent)
-		case <-sm.SaveGlobalState:
+		case extraDelay := <-sm.SaveGlobalState:
 			fmt.Println("Aquí guarda el historico y comienza a grabar los mensajes")
 			// Se debe verificar si está en modo snapshot para guardar los mensajes
 			var messagesIn []models.Message
@@ -51,6 +59,22 @@ func (sm *StateManager) UpdateState() {
 				MessagesOut:  messagesOut,
 			}
 			sm.Snapshots = append(sm.Snapshots, currentSnapshot)
+			sm.takingSnapshot = true
+			sm.pendingMarks = 2
+			sm.MarkMessageOut <- extraDelay
+		case MarkMsg := <-sm.MarkMessageIn:
+			fmt.Println(MarkMsg)
+			if sm.takingSnapshot == true {
+				if sm.pendingMarks > 0 {
+					sm.pendingMarks -= 1
+				} else {
+					sm.takingSnapshot = false
+				}
+			} else {
+				sm.takingSnapshot = true
+				sm.pendingMarks = 1
+				sm.MarkMessageOut <- 100
+			}
 		}
 	}
 }
