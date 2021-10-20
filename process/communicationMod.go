@@ -8,23 +8,31 @@ import (
 )
 
 type CommunicationModule struct {
+	ProcessId         int
+	NetworkInfo       []models.ProcessInfo
 	listener          net.Listener
 	processMessageOut chan models.Message
 	processMessageIn  chan models.Message
+	MarkMessageIn     chan models.Message
+	MarkMessageOut    chan int
 }
 
-func CreateCommunicationModule(port string, processMessageIn chan models.Message, processMessageOut chan models.Message) *CommunicationModule {
-	listener, err := net.Listen("tcp", ":"+port)
+func CreateCommunicationModule(pid int, network []models.ProcessInfo, processMessageIn chan models.Message, processMessageOut chan models.Message, markMessageIn chan models.Message, markMessageOut chan int) *CommunicationModule {
+	process := network[pid]
+	listener, err := net.Listen("tcp", ":"+process.Port)
 
 	if err != nil {
-		fmt.Println(err)
-		panic("Server listen error")
+		panic(fmt.Sprintf("Server listen error %v", err))
 	}
 
 	var communicationModule = CommunicationModule{
+		ProcessId:         pid,
+		NetworkInfo:       network,
 		listener:          listener,
 		processMessageIn:  processMessageIn,
 		processMessageOut: processMessageOut,
+		MarkMessageIn:     markMessageIn,
+		MarkMessageOut:    markMessageOut,
 	}
 
 	go communicationModule.receiver()
@@ -49,9 +57,20 @@ func (comMod *CommunicationModule) sender() {
 	for {
 		select {
 		case processMsg := <-comMod.processMessageOut:
-			// find ip and port first
-			// helpers.Send(processMsg, processMsg.Receiver)
-			fmt.Println(processMsg)
+			for _, proc := range comMod.NetworkInfo {
+				if proc.Name == processMsg.Receiver {
+					helpers.Send(processMsg, proc.Ip+":"+proc.Port)
+				}
+			}
+
+		case delay := <-comMod.MarkMessageOut: // send mark message to take snapshot
+			for i, proc := range comMod.NetworkInfo {
+				if i != comMod.ProcessId {
+					markMsg := models.NewMarkMessage(comMod.NetworkInfo[comMod.ProcessId].Name, comMod.NetworkInfo[i].Name, delay)
+					fmt.Printf("Sending mark to %v \n", proc.Name) // quitar
+					helpers.Send(markMsg, proc.Ip+":"+proc.Port)
+				}
+			}
 		}
 	}
 }

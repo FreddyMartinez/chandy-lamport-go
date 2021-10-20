@@ -17,12 +17,14 @@ func CreateProcess(processId int, network []models.ProcessInfo, taskList []model
 
 	processMessageIn := make(chan models.Message)
 	processMessageOut := make(chan models.Message)
-	updateStateChan := make(chan models.ProcessEvent) // notify when an event occurs
+	updateStateChan := make(chan models.ProcessEvent)
 	saveGlobalState := make(chan bool)
+	markMessageIn := make(chan models.Message)
+	markMessageOut := make(chan int)
 
-	thisJob := CreateJob(processInfo, network, updateStateChan, processMessageIn, processMessageOut, taskList, quit)
+	thisJob := CreateJob(processInfo, network, updateStateChan, processMessageIn, processMessageOut, taskList, markMessageOut, quit)
 
-	thisCommunicationMod := CreateCommunicationModule(processInfo.Port, processMessageIn, processMessageOut)
+	thisCommunicationMod := CreateCommunicationModule(processId, network, processMessageIn, processMessageOut, markMessageIn, markMessageOut)
 
 	thisStateManager := CreateStateManager(processId, updateStateChan, saveGlobalState)
 

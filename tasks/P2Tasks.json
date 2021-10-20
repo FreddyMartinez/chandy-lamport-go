@@ -4,12 +4,12 @@
     "Time": 2,
     "Receiver": 1,
     "Value": 5,
-    "NetworkDelay": 1200
+    "NetworkDelay": 2000
   },
   {
     "MsgType": "AppMsg",
-    "Time": 2,
-    "Receiver": 2,
+    "Time": 3,
+    "Receiver": 0,
     "Value": 5,
     "NetworkDelay": 1200
   },
