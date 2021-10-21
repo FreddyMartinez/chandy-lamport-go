@@ -75,7 +75,6 @@ func (comMod *CommunicationModule) sender() {
 				if i != comMod.ProcessId {
 					totalDelay := delay + comMod.NetworkInfo[comMod.ProcessId].Delays[i]
 					markMsg := models.NewMarkMessage(comMod.NetworkInfo[comMod.ProcessId].Name, comMod.NetworkInfo[i].Name, totalDelay)
-					fmt.Printf("Sending mark to %v \n", proc.Name) // quitar
 					helpers.Send(markMsg, proc.Ip+":"+proc.Port)
 				}
 			}

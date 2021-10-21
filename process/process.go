@@ -1,6 +1,7 @@
 package process
 
 import (
+	"chandylamport/helpers"
 	"chandylamport/models"
 	"fmt"
 )
@@ -21,12 +22,13 @@ func CreateProcess(processId int, network []models.ProcessInfo, taskList []model
 	saveGlobalState := make(chan int)
 	markMessageIn := make(chan models.Message)
 	markMessageOut := make(chan int)
+	logger := helpers.CreateLogger(processInfo.Name)
 
 	thisJob := CreateJob(processInfo, network, updateStateChan, processMessageIn, processMessageOut, taskList, saveGlobalState, quit)
 
 	thisCommunicationMod := CreateCommunicationModule(processId, network, processMessageIn, processMessageOut, markMessageIn, markMessageOut)
 
-	thisStateManager := CreateStateManager(processId, updateStateChan, saveGlobalState, markMessageIn, markMessageOut)
+	thisStateManager := CreateStateManager(processId, updateStateChan, saveGlobalState, markMessageIn, markMessageOut, logger)
 
 	thisProcess := Process{
 		mainJob:       thisJob,

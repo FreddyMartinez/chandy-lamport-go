@@ -3,6 +3,7 @@ package process
 import (
 	"chandylamport/models"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -16,9 +17,10 @@ type StateManager struct {
 	MarkMessageOut  chan int
 	takingSnapshot  bool
 	pendingMarks    int
+	Logger          *log.Logger
 }
 
-func CreateStateManager(pid int, updateStateChan chan models.ProcessEvent, saveGlobalState chan int, markMessageIn chan models.Message, markMessageOut chan int) *StateManager {
+func CreateStateManager(pid int, updateStateChan chan models.ProcessEvent, saveGlobalState chan int, markMessageIn chan models.Message, markMessageOut chan int, logger *log.Logger) *StateManager {
 
 	initEvent := models.ProcessEvent{Description: "Init", Data: ""}
 	var eventhistory []models.ProcessEvent
@@ -36,6 +38,7 @@ func CreateStateManager(pid int, updateStateChan chan models.ProcessEvent, saveG
 		MarkMessageOut:  markMessageOut,
 		takingSnapshot:  false,
 		pendingMarks:    0,
+		Logger:          logger,
 	}
 
 	go thisStateManager.UpdateState()
@@ -46,7 +49,7 @@ func (sm *StateManager) UpdateState() {
 	for {
 		select {
 		case newEvent := <-sm.UpdateStateChan:
-			fmt.Println(newEvent) // quitar
+			sm.Logger.Println(newEvent)
 			if !sm.takingSnapshot || newEvent.Description != models.MsgApp {
 				sm.processHistory.CurrentEvent += 1
 				sm.processHistory.EventHistory = append(sm.processHistory.EventHistory, newEvent)
@@ -58,18 +61,17 @@ func (sm *StateManager) UpdateState() {
 				}
 			}
 		case extraDelay := <-sm.SaveGlobalState:
-			fmt.Println("already taking a snapshot") // quitar
-			if !sm.takingSnapshot {                  // if it's already taking a snapshot just ignore it
+			if !sm.takingSnapshot { // if it's already taking a snapshot just ignore it
 				sm.pendingMarks = 2
 				sm.TakeSnapshot(extraDelay)
 			}
 		case MarkMsg := <-sm.MarkMessageIn:
-			fmt.Println(MarkMsg)
+			sm.Logger.Println(MarkMsg)
 			if sm.takingSnapshot {
 				sm.pendingMarks -= 1
 				if sm.pendingMarks == 0 {
 					sm.takingSnapshot = false
-					fmt.Println(fmt.Sprintf("Snapshot: %v", sm.Snapshots)) // quitar
+					sm.Logger.Println(fmt.Sprintf("Snapshot: %v", sm.Snapshots)) // quitar
 				}
 			} else {
 				sm.pendingMarks = 1
@@ -80,7 +82,7 @@ func (sm *StateManager) UpdateState() {
 }
 
 func (sm *StateManager) TakeSnapshot(extraDelay int) {
-	fmt.Println("Take snapshot") // quitar
+	sm.Logger.Println("Take snapshot") // quitar
 	var messagesIn []models.ProcessEvent
 	var messagesOut []models.ProcessEvent
 	currentSnapshot := models.Snapshot{
