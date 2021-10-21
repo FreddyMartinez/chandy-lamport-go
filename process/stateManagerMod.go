@@ -3,6 +3,7 @@ package process
 import (
 	"chandylamport/models"
 	"fmt"
+	"strings"
 )
 
 type StateManager struct {
@@ -45,40 +46,49 @@ func (sm *StateManager) UpdateState() {
 	for {
 		select {
 		case newEvent := <-sm.UpdateStateChan:
-			fmt.Println(newEvent)
-			sm.processHistory.CurrentEvent += 1
-			sm.processHistory.EventHistory = append(sm.processHistory.EventHistory, newEvent)
-		case extraDelay := <-sm.SaveGlobalState:
-			fmt.Println("Aquí guarda el historico y comienza a grabar los mensajes")
-			// Se debe verificar si está en modo snapshot para guardar los mensajes
-			var messagesIn []models.Message
-			var messagesOut []models.Message
-			currentSnapshot := models.Snapshot{
-				EventHistory: sm.processHistory,
-				MessagesIn:   messagesIn,
-				MessagesOut:  messagesOut,
+			fmt.Println(newEvent) // quitar
+			if !sm.takingSnapshot || newEvent.Description != models.MsgApp {
+				sm.processHistory.CurrentEvent += 1
+				sm.processHistory.EventHistory = append(sm.processHistory.EventHistory, newEvent)
+			} else {
+				if strings.Contains(newEvent.Data, "Send") {
+					sm.Snapshots[len(sm.Snapshots)-1].MessagesOut = append(sm.Snapshots[0].MessagesOut, newEvent)
+				} else {
+					sm.Snapshots[len(sm.Snapshots)-1].MessagesIn = append(sm.Snapshots[0].MessagesIn, newEvent)
+				}
 			}
-			sm.Snapshots = append(sm.Snapshots, currentSnapshot)
-			sm.takingSnapshot = true
-			sm.pendingMarks = 2
-			sm.MarkMessageOut <- extraDelay
+		case extraDelay := <-sm.SaveGlobalState:
+			fmt.Println("already taking a snapshot") // quitar
+			if !sm.takingSnapshot {                  // if it's already taking a snapshot just ignore it
+				sm.pendingMarks = 2
+				sm.TakeSnapshot(extraDelay)
+			}
 		case MarkMsg := <-sm.MarkMessageIn:
 			fmt.Println(MarkMsg)
-			if sm.takingSnapshot == true {
-				if sm.pendingMarks > 0 {
-					sm.pendingMarks -= 1
-				} else {
+			if sm.takingSnapshot {
+				sm.pendingMarks -= 1
+				if sm.pendingMarks == 0 {
 					sm.takingSnapshot = false
+					fmt.Println(fmt.Sprintf("Snapshot: %v", sm.Snapshots)) // quitar
 				}
 			} else {
-				sm.takingSnapshot = true
 				sm.pendingMarks = 1
-				sm.MarkMessageOut <- 100
+				sm.TakeSnapshot(100) // Extra delay of 100 ms, just because
 			}
 		}
 	}
 }
 
-func (sm *StateManager) TakeSnapshot() {
-	fmt.Println("Tomar snapshot")
+func (sm *StateManager) TakeSnapshot(extraDelay int) {
+	fmt.Println("Take snapshot") // quitar
+	var messagesIn []models.ProcessEvent
+	var messagesOut []models.ProcessEvent
+	currentSnapshot := models.Snapshot{
+		EventHistory: sm.processHistory,
+		MessagesIn:   messagesIn,
+		MessagesOut:  messagesOut,
+	}
+	sm.Snapshots = append(sm.Snapshots, currentSnapshot)
+	sm.takingSnapshot = true
+	sm.MarkMessageOut <- extraDelay
 }

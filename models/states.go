@@ -19,8 +19,8 @@ type ProcessHistory struct {
 
 type Snapshot struct {
 	EventHistory ProcessHistory
-	MessagesIn   []Message
-	MessagesOut  []Message
+	MessagesIn   []ProcessEvent
+	MessagesOut  []ProcessEvent
 }
 
 type ChanelState struct {

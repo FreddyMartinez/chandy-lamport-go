@@ -8,20 +8,27 @@
   },
   {
     "MsgType": "AppMsg",
-    "Time": 3,
+    "Time": 5,
     "Receiver": 0,
     "Value": 5,
     "NetworkDelay": 100
   },
   {
     "MsgType": "MarkMsg",
-    "Time": 2,
+    "Time": 4,
     "NetworkDelay": 500
   },
   {
     "MsgType": "AppMsg",
-    "Time": 3,
+    "Time": 2,
     "Receiver": 0,
+    "Value": 5,
+    "NetworkDelay": 100
+  },
+  {
+    "MsgType": "AppMsg",
+    "Time": 6,
+    "Receiver": 1,
     "Value": 5,
     "NetworkDelay": 100
   }
