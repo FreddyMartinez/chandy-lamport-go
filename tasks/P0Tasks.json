@@ -4,18 +4,18 @@
     "Time": 2,
     "Receiver": 1,
     "Value": 5,
-    "NetworkDelay": 1200
+    "NetworkDelay": 500
   },
   {
     "MsgType": "MarkMsg",
-    "Time": 4,
+    "Time": 6,
     "NetworkDelay": 1000
   },
   {
     "MsgType": "AppMsg",
-    "Time": 2,
+    "Time": 4,
     "Receiver": 2,
     "Value": 5,
-    "NetworkDelay": 1500
+    "NetworkDelay": 500
   }
 ]
