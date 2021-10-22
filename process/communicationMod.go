@@ -16,9 +16,10 @@ type CommunicationModule struct {
 	processMessageIn  chan models.Message
 	MarkMessageIn     chan models.Message
 	MarkMessageOut    chan int
+	Logger            *helpers.Logger
 }
 
-func CreateCommunicationModule(pid int, network []models.ProcessInfo, processMessageIn chan models.Message, processMessageOut chan models.Message, markMessageIn chan models.Message, markMessageOut chan int) *CommunicationModule {
+func CreateCommunicationModule(pid int, network []models.ProcessInfo, processMessageIn chan models.Message, processMessageOut chan models.Message, markMessageIn chan models.Message, markMessageOut chan int, logger *helpers.Logger) *CommunicationModule {
 	process := network[pid]
 	listener, err := net.Listen("tcp", ":"+process.Port)
 
@@ -34,6 +35,7 @@ func CreateCommunicationModule(pid int, network []models.ProcessInfo, processMes
 		processMessageOut: processMessageOut,
 		MarkMessageIn:     markMessageIn,
 		MarkMessageOut:    markMessageOut,
+		Logger:            logger,
 	}
 
 	go communicationModule.receiver()
@@ -45,7 +47,7 @@ func CreateCommunicationModule(pid int, network []models.ProcessInfo, processMes
 func (comMod *CommunicationModule) receiver() {
 	for {
 		data := new(models.Message)
-		err := helpers.Receive(data, &comMod.listener)
+		err := helpers.Receive(data, &comMod.listener, comMod.Logger)
 		if err != nil {
 			panic(err)
 		}
@@ -66,7 +68,7 @@ func (comMod *CommunicationModule) sender() {
 		case processMsg := <-comMod.processMessageOut:
 			for _, proc := range comMod.NetworkInfo {
 				if proc.Name == processMsg.Receiver {
-					helpers.Send(processMsg, proc.Ip+":"+proc.Port)
+					helpers.Send(processMsg, proc.Ip+":"+proc.Port, comMod.Logger)
 				}
 			}
 
@@ -75,7 +77,7 @@ func (comMod *CommunicationModule) sender() {
 				if i != comMod.ProcessId {
 					totalDelay := delay + comMod.NetworkInfo[comMod.ProcessId].Delays[i]
 					markMsg := models.NewMarkMessage(comMod.NetworkInfo[comMod.ProcessId].Name, comMod.NetworkInfo[i].Name, totalDelay)
-					helpers.Send(markMsg, proc.Ip+":"+proc.Port)
+					helpers.Send(markMsg, proc.Ip+":"+proc.Port, comMod.Logger)
 				}
 			}
 		}

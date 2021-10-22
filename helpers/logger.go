@@ -24,7 +24,9 @@ func CreateLogger(processId string) *Logger {
 	mark := log.New(file, processId+"\tMARK: \t\t", log.Ltime)
 	snap := log.New(file, processId+"\tSNAPSHOT: \t", log.Ltime)
 
-	goVector := govec.InitGoVector(processId, "govector/"+processId, govec.GetDefaultConfig())
+	defaultConfig := govec.GetDefaultConfig()
+	defaultConfig.UseTimestamps = true
+	goVector := govec.InitGoVector(processId, "govector/"+processId, defaultConfig)
 
 	return &Logger{Event: logger, Mark: mark, Snapshot: snap, GoVec: goVector}
 }

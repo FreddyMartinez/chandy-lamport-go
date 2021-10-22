@@ -26,7 +26,7 @@ func CreateProcess(processId int, network []models.ProcessInfo, taskList []model
 
 	thisJob := CreateJob(processInfo, network, updateStateChan, processMessageIn, processMessageOut, taskList, saveGlobalState, quit)
 
-	thisCommunicationMod := CreateCommunicationModule(processId, network, processMessageIn, processMessageOut, markMessageIn, markMessageOut)
+	thisCommunicationMod := CreateCommunicationModule(processId, network, processMessageIn, processMessageOut, markMessageIn, markMessageOut, logger)
 
 	thisStateManager := CreateStateManager(processId, updateStateChan, saveGlobalState, markMessageIn, markMessageOut, logger)
 
