@@ -1,9 +1,9 @@
 package process
 
 import (
+	"chandylamport/helpers"
 	"chandylamport/models"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -17,10 +17,10 @@ type StateManager struct {
 	MarkMessageOut  chan int
 	takingSnapshot  bool
 	pendingMarks    int
-	Logger          *log.Logger
+	Logger          *helpers.Logger
 }
 
-func CreateStateManager(pid int, updateStateChan chan models.ProcessEvent, saveGlobalState chan int, markMessageIn chan models.Message, markMessageOut chan int, logger *log.Logger) *StateManager {
+func CreateStateManager(pid int, updateStateChan chan models.ProcessEvent, saveGlobalState chan int, markMessageIn chan models.Message, markMessageOut chan int, logger *helpers.Logger) *StateManager {
 
 	initEvent := models.ProcessEvent{Description: "Init", Data: ""}
 	var eventhistory []models.ProcessEvent
@@ -49,7 +49,8 @@ func (sm *StateManager) UpdateState() {
 	for {
 		select {
 		case newEvent := <-sm.UpdateStateChan:
-			sm.Logger.Println(newEvent)
+			sm.Logger.Event.Println(newEvent)
+			sm.Logger.GoVectLog(fmt.Sprintf("[%v] %v", newEvent.Description, newEvent.Data))
 			if !sm.takingSnapshot || newEvent.Description != models.MsgApp {
 				sm.processHistory.CurrentEvent += 1
 				sm.processHistory.EventHistory = append(sm.processHistory.EventHistory, newEvent)
@@ -66,12 +67,13 @@ func (sm *StateManager) UpdateState() {
 				sm.TakeSnapshot(extraDelay)
 			}
 		case MarkMsg := <-sm.MarkMessageIn:
-			sm.Logger.Println(MarkMsg)
+			sm.Logger.Mark.Println(MarkMsg)
 			if sm.takingSnapshot {
 				sm.pendingMarks -= 1
 				if sm.pendingMarks == 0 {
 					sm.takingSnapshot = false
-					sm.Logger.Println(fmt.Sprintf("Snapshot: %v", sm.Snapshots)) // quitar
+					sm.Logger.GoVectLog("Finish taking the snapshot")
+					sm.Logger.Snapshot.Println(sm.Snapshots[len(sm.Snapshots)-1]) // quitar
 				}
 			} else {
 				sm.pendingMarks = 1
@@ -82,7 +84,8 @@ func (sm *StateManager) UpdateState() {
 }
 
 func (sm *StateManager) TakeSnapshot(extraDelay int) {
-	sm.Logger.Println("Take snapshot") // quitar
+	sm.Logger.Mark.Println("Start taking the snapshot")
+	sm.Logger.GoVectLog("Start taking the snapshot")
 	var messagesIn []models.ProcessEvent
 	var messagesOut []models.ProcessEvent
 	currentSnapshot := models.Snapshot{
