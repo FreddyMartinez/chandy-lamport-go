@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 )
 
+// const path = "/home/a846866/Documents/"
 const path = "/home/freedy/Documents/master/RedesYDistribuidos/Practica1/chandylamport/"
 
 func readFile(fileName string) []byte {

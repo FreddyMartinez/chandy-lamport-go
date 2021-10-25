@@ -8,15 +8,23 @@ import (
 	"time"
 )
 
+// const localPath = "/home/a846866/Documents/"
 const localPath = "/home/freedy/Documents/master/RedesYDistribuidos/Practica1/chandylamport/"
+
+// const binFile = "; ./chandylamportlab "
+const binFile = "; ./chandylamport "
+
+// const jsonFile = " labnetwork.json"
+const jsonFile = "network.json"
 
 // Used to launch all processes programmatically
 func TestMain(m *testing.M) {
 	// crear los 3 procesos
-	for i := 0; i < 3; i++ {
-		sshConn := helpers.CreateSSHClient("127.0.0.1")
+	processes := helpers.ReadNetConfig(jsonFile)
+	for i, proc := range processes {
+		sshConn := helpers.CreateSSHClient(proc.Ip)
 
-		command := "cd " + localPath + "; /usr/local/go/bin/go run main.go " + strconv.Itoa(i) + " network.json"
+		command := "cd " + localPath + binFile + strconv.Itoa(i) + " " + jsonFile
 		go helpers.RunCommand(command, sshConn)
 
 		defer sshConn.Close()
