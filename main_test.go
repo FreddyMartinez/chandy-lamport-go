@@ -5,26 +5,23 @@ import (
 	"os"
 	"strconv"
 	"testing"
-
-	"golang.org/x/crypto/ssh"
+	"time"
 )
 
 const localPath = "/home/freedy/Documents/master/RedesYDistribuidos/Practica1/chandylamport/"
 
 // Used to launch all processes programmatically
-func MainTest(m *testing.M) {
+func TestMain(m *testing.M) {
 	// crear los 3 procesos
-	sshConn := make(map[int]*ssh.Client)
 	for i := 0; i < 3; i++ {
-		sshConn[i] = helpers.CreateSSHClient("127.0.0.1")
+		sshConn := helpers.CreateSSHClient("127.0.0.1")
 
-		command := "/usr/local/go/bin/go run " + localPath + "main.go " + strconv.Itoa(i) + " network.json"
-		go helpers.RunCommand(command, sshConn[i])
+		command := "cd " + localPath + "; /usr/local/go/bin/go run main.go " + strconv.Itoa(i) + " network.json"
+		go helpers.RunCommand(command, sshConn)
 
+		defer sshConn.Close()
 	}
-	for _, conn := range sshConn {
-		defer conn.Close()
-	}
+	time.Sleep(10 * time.Second)
 	code := m.Run()
 	os.Exit(code)
 }

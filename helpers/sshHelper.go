@@ -5,7 +5,7 @@
 package helpers
 
 import (
-	"io"
+	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -61,18 +61,14 @@ func RunCommand(cmd string, conn *ssh.Client) {
 		panic(err)
 	}
 	defer sess.Close()
-	sessStdOut, err := sess.StdoutPipe()
+
+	// setup standard out and error
+	sess.Stdout = os.Stdout
+	sess.Stderr = os.Stderr
+	//fmt.Println(cmd)
+	err = sess.Run(cmd)
 	if err != nil {
-		panic(err)
-	}
-	go io.Copy(os.Stdout, sessStdOut)
-	sessStderr, err := sess.StderrPipe()
-	if err != nil {
-		panic(err)
-	}
-	go io.Copy(os.Stderr, sessStderr)
-	err = sess.Run(cmd) // eg., /usr/bin/whoami
-	if err != nil {
+		fmt.Println(cmd)
 		panic(err)
 	}
 }
